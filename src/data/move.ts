@@ -3060,10 +3060,12 @@ export class AddArenaTrapTagAttr extends AddArenaTagAttr {
 export class RemoveArenaTrapAttr extends MoveEffectAttr {
 
   private targetBothSides: boolean;
+  private targetsSelf: boolean;
 
-  constructor(targetBothSides: boolean = false) {
+  constructor(targetBothSides: boolean = false, targetsSelf: boolean = false) {
     super(true, MoveEffectTrigger.PRE_APPLY);
     this.targetBothSides = targetBothSides;
+    this.targetsSelf = targetsSelf;
   }
 
   apply(user: Pokemon, target: Pokemon, move: Move, args: any[]): boolean {
@@ -3081,6 +3083,12 @@ export class RemoveArenaTrapAttr extends MoveEffectAttr {
       user.scene.arena.removeTagOnSide(ArenaTagType.TOXIC_SPIKES, ArenaTagSide.ENEMY);
       user.scene.arena.removeTagOnSide(ArenaTagType.STEALTH_ROCK, ArenaTagSide.ENEMY);
       user.scene.arena.removeTagOnSide(ArenaTagType.STICKY_WEB, ArenaTagSide.ENEMY);
+    }
+    else if (this.targetsSelf) {
+      user.scene.arena.removeTagOnSide(ArenaTagType.SPIKES, target.isPlayer() ? ArenaTagSide.PLAYER : ArenaTagSide.ENEMY);
+      user.scene.arena.removeTagOnSide(ArenaTagType.TOXIC_SPIKES, target.isPlayer() ? ArenaTagSide.PLAYER : ArenaTagSide.ENEMY);
+      user.scene.arena.removeTagOnSide(ArenaTagType.STEALTH_ROCK, target.isPlayer() ? ArenaTagSide.PLAYER : ArenaTagSide.ENEMY);
+      user.scene.arena.removeTagOnSide(ArenaTagType.STICKY_WEB, target.isPlayer() ? ArenaTagSide.PLAYER : ArenaTagSide.ENEMY);
     }
     else {
       user.scene.arena.removeTagOnSide(ArenaTagType.SPIKES, target.isPlayer() ? ArenaTagSide.ENEMY : ArenaTagSide.PLAYER);
@@ -6710,7 +6718,7 @@ export function initMoves() {
       .target(MoveTarget.BOTH_SIDES),
     new SelfStatusMove(Moves.TIDY_UP, Type.NORMAL, -1, 10, 100, 0, 9)
       .attr(StatChangeAttr, [ BattleStat.ATK, BattleStat.SPD ], 1, true)
-      .attr(RemoveArenaTrapAttr),
+      .attr(RemoveArenaTrapAttr, false, true),
     new StatusMove(Moves.SNOWSCAPE, Type.ICE, -1, 10, -1, 0, 9)
       .attr(WeatherChangeAttr, WeatherType.SNOW)
       .target(MoveTarget.BOTH_SIDES),
