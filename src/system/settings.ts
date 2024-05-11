@@ -27,7 +27,8 @@ export enum Setting {
   Gamepad_Support = "GAMEPAD_SUPPORT",
   Swap_A_and_B = "SWAP_A_B", // Swaps which gamepad button handles ACTION and CANCEL
   Touch_Controls = "TOUCH_CONTROLS",
-  Vibration = "VIBRATION"
+  Vibration = "VIBRATION",
+  IVs = "IV_ESTIMATES" // IV estimates used in enemy base stat display
 }
 
 export interface SettingOptions {
@@ -59,7 +60,8 @@ export const settingOptions: SettingOptions = {
   [Setting.Gamepad_Support]: [ 'Auto', 'Disabled' ],
   [Setting.Swap_A_and_B]: [ 'Enabled', 'Disabled' ],
   [Setting.Touch_Controls]: [ 'Auto', 'Disabled' ],
-  [Setting.Vibration]: [ 'Auto', 'Disabled' ]
+  [Setting.Vibration]: [ 'Auto', 'Disabled' ],
+  [Setting.IVs]: [ '0', '10', '15' ]
 };
 
 export const settingDefaults: SettingDefaults = {
@@ -83,7 +85,8 @@ export const settingDefaults: SettingDefaults = {
   [Setting.Gamepad_Support]: 0,
   [Setting.Swap_A_and_B]: 1, // Set to 'Disabled' by default
   [Setting.Touch_Controls]: 0,
-  [Setting.Vibration]: 0
+  [Setting.Vibration]: 0,
+  [Setting.IVs]: 0
 };
 
 export const reloadSettings: Setting[] = [ Setting.UI_Theme, Setting.Language, Setting.Sprite_Set ];
@@ -162,6 +165,19 @@ export function setSetting(scene: BattleScene, setting: Setting, value: integer)
       break;
     case Setting.Vibration:
       scene.enableVibration = settingOptions[setting][value] !== 'Disabled' && hasTouchscreen();
+      break;
+    case Setting.IVs:
+      switch(value) {
+        case 0:
+          scene.ivEstimates = 0;
+          break;
+        case 1:
+          scene.ivEstimates = 10;
+          break;
+        case 2:
+          scene.ivEstimates = 15;
+          break;
+      }
       break;
     case Setting.Language:
       if (value) {

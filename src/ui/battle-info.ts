@@ -574,6 +574,7 @@ export default class BattleInfo extends Phaser.GameObjects.Container {
         // console.log('summon stats', pokemon.summonData.stats)
         this.updateBaseStats(pokemon.stats.slice(1));
       } else {
+        console.log('ivestimate', this.scene.ivEstimates)
         this.updateBaseStats(pokemon.getDisplayStats().slice(1));
       }
 

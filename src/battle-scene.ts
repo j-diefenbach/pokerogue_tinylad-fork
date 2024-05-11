@@ -154,7 +154,8 @@ export default class BattleScene extends SceneBase {
 	private fieldOverlay: Phaser.GameObjects.Rectangle;
 	private modifiers: PersistentModifier[];
 	private enemyModifiers: PersistentModifier[];
-	public uiContainer: Phaser.GameObjects.Container;
+  	public ivEstimates: number = 1; // can add functionality with IV scanner in future
+  	public uiContainer: Phaser.GameObjects.Container;
 	public ui: UI;
 
 	public seed: string;

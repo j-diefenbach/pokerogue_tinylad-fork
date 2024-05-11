@@ -667,7 +667,9 @@ export default abstract class Pokemon extends Phaser.GameObjects.Container {
       const isHp = s === Stat.HP;
       let baseStat = baseStats[s];
       // assumes IVs of 7 (average)
-      let value = Math.floor(((2 * baseStat + 7) * this.level) * 0.01);
+      console.log(this.scene)
+      console.log('ivestimate', this.scene.ivEstimates)
+      let value = Math.floor(((2 * baseStat + this.scene.ivEstimates) * this.level) * 0.01);
       if (isHp) {
         value = value + this.level + 10;
       //   if (this.hasAbility(Abilities.WONDER_GUARD, false, true))
