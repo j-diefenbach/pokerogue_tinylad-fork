@@ -8,8 +8,11 @@ import BattleScene from '../battle-scene';
 import { Type, getTypeRgb } from '../data/type';
 import { getVariantTint } from '#app/data/variant';
 import { BattleStat } from '#app/data/battle-stat';
+import { Stat } from '#app/data/pokemon-stat.js';
+import FontSizeFit from 'phaser3-rex-plugins/plugins/utils/text/fontsizefit/FontSizeFit';
 
 const battleStatOrder = [ BattleStat.ATK, BattleStat.DEF, BattleStat.SPATK, BattleStat.SPDEF, BattleStat.ACC, BattleStat.EVA, BattleStat.SPD ];
+const baseStatOrder = [ Stat.HP, Stat.ATK, Stat.DEF, Stat.SPATK, Stat.SPDEF, Stat.SPD ];
 
 export default class BattleInfo extends Phaser.GameObjects.Container {
   private player: boolean;
@@ -54,6 +57,11 @@ export default class BattleInfo extends Phaser.GameObjects.Container {
   private statsBox: Phaser.GameObjects.Sprite;
   private statValuesContainer: Phaser.GameObjects.Container;
   private statNumbers: Phaser.GameObjects.Sprite[];
+
+  private baseStatsContainer: Phaser.GameObjects.Container;
+  private baseStatsBox: Phaser.GameObjects.Sprite;
+  private baseStatValuesContainer: Phaser.GameObjects.Container;
+  private baseStatNumbers: Phaser.GameObjects.Text[];
 
   constructor(scene: Phaser.Scene, x: number, y: number, player: boolean) {
     super(scene, x, y);
@@ -179,7 +187,6 @@ export default class BattleInfo extends Phaser.GameObjects.Container {
 
     const statLabels: Phaser.GameObjects.Sprite[] = [];
     this.statNumbers = [];
-
     this.statValuesContainer = this.scene.add.container(0, 0);
     this.statsContainer.add(this.statValuesContainer);
 
@@ -195,6 +202,37 @@ export default class BattleInfo extends Phaser.GameObjects.Container {
       statNumber.setOrigin(0, 0);
       this.statNumbers.push(statNumber);
       this.statValuesContainer.add(statNumber);
+    });
+
+    // new base stats box
+    this.baseStatsContainer = this.scene.add.container(0, 0);
+    this.baseStatsContainer.setAlpha(0);
+    this.add(this.baseStatsContainer);
+
+    this.baseStatsBox = this.scene.add.sprite(0, 0, `${this.getTextureName()}_stats`);
+    this.baseStatsBox.setOrigin(1, 0.5);
+    this.baseStatsContainer.add(this.baseStatsBox);
+
+    const baseStatLabels: Phaser.GameObjects.Text[] = [];
+    this.baseStatNumbers = [];
+    this.baseStatValuesContainer = this.scene.add.container(0, 0);
+    this.baseStatsContainer.add(this.baseStatValuesContainer);
+
+    baseStatOrder.map((s, i) => {
+      const statX = i > 1 ? this.baseStatNumbers[i - 2].x + this.baseStatNumbers[i - 2].width / 7 + 4 : -this.baseStatsBox.width + 12;
+      const statY = -this.baseStatsBox.height / 2 + 4 + (i <= baseStatOrder.length - 1 ? (i % 2 ? 10 : 0) : 5);
+      // const baseStatLabel = this.scene.add.sprite(statX, statY, 'pbinfo_stat', Stat[s]);
+      const baseStatLabel = addTextObject(this.scene, statX, statY, Stat[s], TextStyle.BATTLE_INFO);
+      baseStatLabel.setOrigin(0, 0);
+      baseStatLabels.push(baseStatLabel);
+      this.baseStatValuesContainer.add(baseStatLabel);
+
+      // const statNumber = this.scene.add.sprite(statX + baseStatLabel.width, statY, 'pbinfo_stat_numbers', '3');
+      const statNumber = addTextObject(this.scene, statX + baseStatLabel.width / 6 + 4, statY, '100', TextStyle.BATTLE_INFO);
+      statNumber.text = '100'
+      statNumber.setOrigin(0, 0);
+      this.baseStatNumbers.push(statNumber);
+      this.baseStatValuesContainer.add(statNumber);
     });
 
     this.type1Icon = this.scene.add.sprite(player ? -139 : -15, player ? -17 : -15.5, `pbinfo_${player ? 'player' : 'enemy'}_type1`);
@@ -339,6 +377,14 @@ export default class BattleInfo extends Phaser.GameObjects.Container {
   toggleStats(visible: boolean): void {
     this.scene.tweens.add({
       targets: this.statsContainer,
+      duration: Utils.fixedInt(125),
+      ease: 'Sine.easeInOut',
+      alpha: visible ? 1 : 0
+    });
+  }
+  toggleBaseStats(visible: boolean): void {
+    this.scene.tweens.add({
+      targets: this.baseStatsContainer,
       duration: Utils.fixedInt(125),
       ease: 'Sine.easeInOut',
       alpha: visible ? 1 : 0
@@ -510,6 +556,15 @@ export default class BattleInfo extends Phaser.GameObjects.Container {
         this.updateBattleStats(battleStats);
         this.lastBattleStats = battleStatsStr;
       }
+      // console.log(pokemon.stats);
+      // console.log(pokemon.getDisplayStats());
+      if (this.player) {
+        // console.log('stats', pokemon.stats)
+        // console.log('summon stats', pokemon.summonData.stats)
+        this.updateBaseStats(pokemon.stats);
+      } else {
+        this.updateBaseStats(pokemon.getDisplayStats());
+      }
 
       this.shinyIcon.setVisible(pokemon.isShiny());
 
@@ -612,6 +667,13 @@ export default class BattleInfo extends Phaser.GameObjects.Container {
     battleStatOrder.map((s, i) => {
       this.statNumbers[i].setFrame(battleStats[s].toString());
     });
+  }
+  updateBaseStats(baseStats: integer[]): void {
+    console.log(baseStats)
+      baseStats.map((s, i) => {
+        this.baseStatNumbers[i].setText(s.toString());
+      });
+    
   }
 }
 

@@ -8,6 +8,7 @@ export enum Button {
 	CANCEL,
 	MENU,
 	STATS,
+	BASE_STATS,
 	CYCLE_SHINY,
 	CYCLE_FORM,
 	CYCLE_GENDER,

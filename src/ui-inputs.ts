@@ -57,6 +57,7 @@ export class UiInputs {
         actions[Button.CANCEL] = () => this.buttonAb(Button.CANCEL);
         actions[Button.MENU] = () => this.buttonMenu();
         actions[Button.STATS] = () => this.buttonStats(true);
+        actions[Button.BASE_STATS] = () => this.buttonBaseStats(true);
         actions[Button.CYCLE_SHINY] = () => this.buttonCycleOption(Button.CYCLE_SHINY);
         actions[Button.CYCLE_FORM] = () => this.buttonCycleOption(Button.CYCLE_FORM);
         actions[Button.CYCLE_GENDER] = () => this.buttonCycleOption(Button.CYCLE_GENDER);
@@ -71,6 +72,7 @@ export class UiInputs {
     getActionsKeyUp(): ActionKeys {
         const actions = {};
         actions[Button.STATS] = () => this.buttonStats(false);
+        actions[Button.BASE_STATS] = () => this.buttonBaseStats(false);
         return actions;
     }
 
@@ -95,6 +97,16 @@ export class UiInputs {
         } else {
             for (let p of this.scene.getField().filter(p => p?.isActive(true)))
                 p.toggleStats(false);
+        }
+    }
+
+    buttonBaseStats(pressed: boolean = true): void {
+        if (pressed) {
+            for (let p of this.scene.getField().filter(p => p?.isActive(true)))
+                p.toggleBaseStats(true);
+        } else {
+            for (let p of this.scene.getField().filter(p => p?.isActive(true)))
+                p.toggleBaseStats(false);
         }
     }
 

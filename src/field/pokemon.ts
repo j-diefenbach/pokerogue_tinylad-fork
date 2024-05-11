@@ -648,6 +648,46 @@ export default abstract class Pokemon extends Phaser.GameObjects.Container {
     }
   }
 
+  getDisplayStats(): integer[] {
+    if (!this.stats)
+      this.stats = [ 0, 0, 0, 0, 0, 0 ];
+    const baseStats = this.getSpeciesForm().baseStats.slice(0);
+    let displayStats = [ 0, 0, 0, 0, 0, 0 ];
+    if (this.fusionSpecies) {
+      const fusionBaseStats = this.getFusionSpeciesForm().baseStats;
+      for (let s = 0; s < this.stats.length; s++)
+        baseStats[s] = Math.ceil((baseStats[s] + fusionBaseStats[s]) / 2);
+    } else if (this.scene.gameMode.isSplicedOnly) {
+      for (let s = 0; s < this.stats.length; s++)
+        baseStats[s] = Math.ceil(baseStats[s] / 2);
+    }
+    this.scene.applyModifiers(PokemonBaseStatModifier, this.isPlayer(), this, baseStats);
+    const stats = Utils.getEnumValues(Stat);
+    for (let s of stats) {
+      const isHp = s === Stat.HP;
+      let baseStat = baseStats[s];
+      // assumes IVs of 7 (average)
+      let value = Math.floor(((2 * baseStat + 7) * this.level) * 0.01);
+      if (isHp) {
+        value = value + this.level + 10;
+      //   if (this.hasAbility(Abilities.WONDER_GUARD, false, true))
+      //     value = 1;
+      //   if (this.hp > value || this.hp === undefined)
+      //     this.hp = value;
+      //   else if (this.hp) {
+      //     const lastMaxHp = this.getMaxHp();
+      //     if (lastMaxHp && value > lastMaxHp)
+      //       this.hp += value - lastMaxHp;
+      //   }
+      } else {
+        value += 5;
+      }
+
+      displayStats[s] = value;
+    }
+    return displayStats
+  }
+
   getNature(): Nature {
     return this.natureOverride !== -1 ? this.natureOverride : this.nature;
   }
@@ -1239,6 +1279,9 @@ export default abstract class Pokemon extends Phaser.GameObjects.Container {
 
   toggleStats(visible: boolean): void {
     this.battleInfo.toggleStats(visible);
+  }
+  toggleBaseStats(visible: boolean): void {
+    this.battleInfo.toggleBaseStats(visible);
   }
 
   addExp(exp: integer) {
@@ -1956,7 +1999,7 @@ export default abstract class Pokemon extends Phaser.GameObjects.Container {
       ];
 
       const tag = invulnerableTags.find((t) => this.getTag(t));
-
+      
       if (tag) {
         this.removeTag(tag);
         this.getMoveQueue().pop();

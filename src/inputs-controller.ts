@@ -50,6 +50,7 @@ export class InputsController {
         // We don't want the menu key to be repeated
         delete this.interactions[Button.MENU];
         delete this.interactions[Button.STATS];
+        delete this.interactions[Button.BASE_STATS];
         this.init();
     }
 
@@ -180,6 +181,7 @@ export class InputsController {
             [Button.CANCEL]: [keyCodes.BACKSPACE, keyCodes.X],
             [Button.MENU]: [keyCodes.ESC, keyCodes.M],
             [Button.STATS]: [keyCodes.SHIFT, keyCodes.C],
+            [Button.BASE_STATS]: [keyCodes.SHIFT, keyCodes.ALT],
             [Button.CYCLE_SHINY]: [keyCodes.R],
             [Button.CYCLE_FORM]: [keyCodes.F],
             [Button.CYCLE_GENDER]: [keyCodes.G],
