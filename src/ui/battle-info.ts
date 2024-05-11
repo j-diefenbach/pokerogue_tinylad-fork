@@ -62,6 +62,7 @@ export default class BattleInfo extends Phaser.GameObjects.Container {
   private baseStatsBox: Phaser.GameObjects.Sprite;
   private baseStatValuesContainer: Phaser.GameObjects.Container;
   private baseStatNumbers: Phaser.GameObjects.Text[];
+  private baseStatNumberContainers: Phaser.GameObjects.Container[];
 
   constructor(scene: Phaser.Scene, x: number, y: number, player: boolean) {
     super(scene, x, y);
@@ -215,11 +216,12 @@ export default class BattleInfo extends Phaser.GameObjects.Container {
 
     const baseStatLabels: Phaser.GameObjects.Sprite[] = [];
     this.baseStatNumbers = [];
+    this.baseStatNumberContainers = [];
     this.baseStatValuesContainer = this.scene.add.container(0, 0);
     this.baseStatsContainer.add(this.baseStatValuesContainer);
 
     baseStatOrder.map((s, i) => {
-      const statX = i > 1 ? baseStatLabels[i - 2].x + baseStatLabels[i - 2].width + this.baseStatNumbers[i - 2].width / 7 + 8 : -this.baseStatsBox.width + 4;
+      const statX = i > 1 ? baseStatLabels[i - 2].x + baseStatLabels[i - 2].width + 16 + 6 : -this.baseStatsBox.width + 4;
       const statY = -this.baseStatsBox.height / 2 + 4 + (i < baseStatOrder.length - 1 ? (i % 2 ? 10 : 0) : 5);
       // const baseStatLabel = this.scene.add.sprite(statX, statY, 'pbinfo_stat', Stat[s]);
       const baseStatLabel = this.scene.add.sprite(statX, statY, 'pbinfo_stat', Stat[s]);
@@ -229,20 +231,15 @@ export default class BattleInfo extends Phaser.GameObjects.Container {
 
       // const statNumber = this.scene.add.sprite(statX + baseStatLabel.width, statY, 'pbinfo_stat_numbers', '3');
       
-      const statNumber = addTextObject(this.scene, statX + baseStatLabel.width + 2, statY - 2, '100', TextStyle.PARTY);
-      // const maxHpStr = maxHp.toString();
-      // let offset = 0;
-      // for (let i = maxHpStr.length - 1; i >= 0; i--)
-      //   this.hpNumbersContainer.add(this.scene.add.image(offset++ * -8, 0, 'numbers', maxHpStr[i]));
-      // this.hpNumbersContainer.add(this.scene.add.image(offset++ * -8, 0, 'numbers', '/'));
-      // for (let i = hpStr.length - 1; i >= 0; i--)
-      //   this.hpNumbersContainer.add(this.scene.add.image(offset++ * -8, 0, 'numbers', hpStr[i]));
-      // let testNumber = '1234'
+      const statNumber = addTextObject(this.scene, statX + baseStatLabel.width + 2, statY - 2, '100', TextStyle.BATTLE_INFO);
+      const statNumberContainer = this.scene.add.container(statX + baseStatLabel.width + 15, statY - 1.5);
 
-      statNumber.text = '100k'
+      statNumber.text = ''
       statNumber.setOrigin(0, 0);
       this.baseStatNumbers.push(statNumber);
+      this.baseStatNumberContainers.push(statNumberContainer);
       this.baseStatValuesContainer.add(statNumber);
+      this.baseStatValuesContainer.add(statNumberContainer);
     });
 
     this.type1Icon = this.scene.add.sprite(player ? -139 : -15, player ? -17 : -15.5, `pbinfo_${player ? 'player' : 'enemy'}_type1`);
@@ -682,24 +679,73 @@ export default class BattleInfo extends Phaser.GameObjects.Container {
       this.statNumbers[i].setFrame(battleStats[s].toString());
     });
   }
+  updateBaseStatNumbers(numContainer: Phaser.GameObjects.Container, s: string): void {
+    // const maxHpStr = maxHp.toString();
+    console.log(s)
+    const constOffset = -14
+    let offset = 0;
+    // for (let i = s.length - 1; i >= 0; i--)
+    //   if (s[i] === ',' || s[i] === '.') {
+    //     numContainer.add(this.scene.add.image(offset * -8 + 4, 12, 'dot').setScale(0.75, 0.75));
+    //   } else if (s[i] === 'k') {
+    //     numContainer.add(this.scene.add.image(offset * -8 + 4, 12, 'million').setScale(0.5, 0.5));
+    //   } else if (s[i] === 'M') {
+    //     numContainer.add(this.scene.add.image(offset * -8, 8, 'million'));
+    //   } else {
+    //     numContainer.add(this.scene.add.image(offset++ * -8, 8, 'numbers', s[i]));
+    //   }
+    for (let i = 0; i < s.length; i++)
+      if (s[i] === ',' || s[i] === '.') {
+        numContainer.add(this.scene.add.image(constOffset + offset * 8 - 4, 12, 'dot').setScale(0.5, 0.5));
+      } else if (s[i] === 'k') {
+        numContainer.add(this.scene.add.image(constOffset + offset * 8 - 4, 12, 'thousand').setScale(0.5, 0.5));
+      } else if (s[i] === 'M') {
+        numContainer.add(this.scene.add.image(constOffset + offset * 8 - 4, 12, 'million').setScale(0.5, 0.5));
+      } else if (s[i] === ' ') {
+        offset++;
+      } else {
+        numContainer.add(this.scene.add.image(constOffset + offset++ * 8, 8, 'numbers', s[i]));
+      }
+    numContainer.setScale(0.8,0.8)
+    // this.baseStatValuesContainer.add(this.scene.add.image(offset++ * -8, 0, 'numbers', '0'));
+    // this.baseStatValuesContainer.add(this.scene.add.image(offset * -8 +4, 4, 'numbers', '/').setScale(0.5,0.5));
+    // this.baseStatValuesContainer.add(this.scene.add.image(offset++ * -8, 0, 'numbers', '0'));
+    // this.hpNumbersContainer.add(this.scene.add.image(offset++ * -8, 0, 'numbers', 'k'));
+
+  }
   updateBaseStats(baseStats: integer[]): void {
     console.log(baseStats)
       baseStats.map((s, i) => {
-        // convert from integer to mixed 3sig fig (1.89k, 101k, 1.21M etc)
-        let num = s.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ".").substring(0,4)
+        // converts from integer to mixed 3sig fig (999, 1.89k, 101k, 1.21M etc)
+        // round last visible digit
+        let num = s.toString()
+        if (s.toString().length > 3) {
+          num = num.substring(0, 2) + (parseInt(num[3]) >= 5) ? '1' : '0' + num.substring(3)
+        }
+        // XXXX XXX. XX.X X.XX
+        num = s.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ".").substring(0,4)
+        if (num.indexOf('.') <= -1) {
+          // XXXX -> XXX
+          num = num.substring(0,3);
+        } else if (num.indexOf('.') === 3) {
+          // XXX. -> XXX
+          num = num.substring(0,3);
+        }
         let display = ''
         if (s > 1000000) {
           display = num + 'M'
         } else if (s > 1000) {
           display = num + 'k'
         } else if (s < 10) {
-          display = ' ' + num + '  '
-        } else if (s < 100) {
           display = ' ' + num + ' '
-        } else if (s < 1000) {
-          display = num + ' '
+        } else if (s < 100) {
+          display = ' ' + num
+        } else {
+          display = num
         }
-        this.baseStatNumbers[i].setText(display);
+        this.baseStatNumberContainers[i].removeAll(true)
+        this.updateBaseStatNumbers(this.baseStatNumberContainers[i], display);
+        // this.baseStatNumbers[i].setText(display);
       });
     
   }

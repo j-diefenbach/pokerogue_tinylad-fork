@@ -59,6 +59,9 @@ export class LoadingScene extends SceneBase {
     this.loadImage('overlay_lv', 'ui');
     this.loadAtlas('numbers', 'ui');
     this.loadAtlas('numbers_red', 'ui');
+    this.loadImage('thousand', 'ui');
+    this.loadImage('million', 'ui');
+    this.loadImage('dot', 'ui');
     this.loadAtlas('overlay_hp', 'ui');
     this.loadAtlas('overlay_hp_boss', 'ui');
     this.loadImage('overlay_exp', 'ui');
