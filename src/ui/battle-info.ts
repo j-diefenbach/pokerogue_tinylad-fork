@@ -12,7 +12,7 @@ import { Stat } from '#app/data/pokemon-stat.js';
 import FontSizeFit from 'phaser3-rex-plugins/plugins/utils/text/fontsizefit/FontSizeFit';
 
 const battleStatOrder = [ BattleStat.ATK, BattleStat.DEF, BattleStat.SPATK, BattleStat.SPDEF, BattleStat.ACC, BattleStat.EVA, BattleStat.SPD ];
-const baseStatOrder = [ Stat.HP, Stat.ATK, Stat.DEF, Stat.SPATK, Stat.SPDEF, Stat.SPD ];
+const baseStatOrder = [ Stat.ATK, Stat.DEF, Stat.SPATK, Stat.SPDEF, Stat.SPD ];
 
 export default class BattleInfo extends Phaser.GameObjects.Container {
   private player: boolean;
@@ -213,23 +213,33 @@ export default class BattleInfo extends Phaser.GameObjects.Container {
     this.baseStatsBox.setOrigin(1, 0.5);
     this.baseStatsContainer.add(this.baseStatsBox);
 
-    const baseStatLabels: Phaser.GameObjects.Text[] = [];
+    const baseStatLabels: Phaser.GameObjects.Sprite[] = [];
     this.baseStatNumbers = [];
     this.baseStatValuesContainer = this.scene.add.container(0, 0);
     this.baseStatsContainer.add(this.baseStatValuesContainer);
 
     baseStatOrder.map((s, i) => {
-      const statX = i > 1 ? this.baseStatNumbers[i - 2].x + this.baseStatNumbers[i - 2].width / 7 + 4 : -this.baseStatsBox.width + 12;
-      const statY = -this.baseStatsBox.height / 2 + 4 + (i <= baseStatOrder.length - 1 ? (i % 2 ? 10 : 0) : 5);
+      const statX = i > 1 ? baseStatLabels[i - 2].x + baseStatLabels[i - 2].width + this.baseStatNumbers[i - 2].width / 7 + 8 : -this.baseStatsBox.width + 4;
+      const statY = -this.baseStatsBox.height / 2 + 4 + (i < baseStatOrder.length - 1 ? (i % 2 ? 10 : 0) : 5);
       // const baseStatLabel = this.scene.add.sprite(statX, statY, 'pbinfo_stat', Stat[s]);
-      const baseStatLabel = addTextObject(this.scene, statX, statY, Stat[s], TextStyle.BATTLE_INFO);
+      const baseStatLabel = this.scene.add.sprite(statX, statY, 'pbinfo_stat', Stat[s]);
       baseStatLabel.setOrigin(0, 0);
       baseStatLabels.push(baseStatLabel);
       this.baseStatValuesContainer.add(baseStatLabel);
 
       // const statNumber = this.scene.add.sprite(statX + baseStatLabel.width, statY, 'pbinfo_stat_numbers', '3');
-      const statNumber = addTextObject(this.scene, statX + baseStatLabel.width / 6 + 4, statY, '100', TextStyle.BATTLE_INFO);
-      statNumber.text = '100'
+      
+      const statNumber = addTextObject(this.scene, statX + baseStatLabel.width + 2, statY - 2, '100', TextStyle.PARTY);
+      // const maxHpStr = maxHp.toString();
+      // let offset = 0;
+      // for (let i = maxHpStr.length - 1; i >= 0; i--)
+      //   this.hpNumbersContainer.add(this.scene.add.image(offset++ * -8, 0, 'numbers', maxHpStr[i]));
+      // this.hpNumbersContainer.add(this.scene.add.image(offset++ * -8, 0, 'numbers', '/'));
+      // for (let i = hpStr.length - 1; i >= 0; i--)
+      //   this.hpNumbersContainer.add(this.scene.add.image(offset++ * -8, 0, 'numbers', hpStr[i]));
+      // let testNumber = '1234'
+
+      statNumber.text = '100k'
       statNumber.setOrigin(0, 0);
       this.baseStatNumbers.push(statNumber);
       this.baseStatValuesContainer.add(statNumber);
@@ -335,6 +345,7 @@ export default class BattleInfo extends Phaser.GameObjects.Container {
       this.lastLevelExp = pokemon.levelExp;
 
       this.statValuesContainer.setPosition(8, 7)
+      this.baseStatValuesContainer.setPosition(8, 7)
     }
 
     const battleStats = battleStatOrder.map(() => 0);
@@ -355,6 +366,7 @@ export default class BattleInfo extends Phaser.GameObjects.Container {
 
     this.box.setTexture(this.getTextureName());
     this.statsBox.setTexture(`${this.getTextureName()}_stats`);
+    this.baseStatsBox.setTexture(`${this.getTextureName()}_stats`);
 
     if (this.player)
       this.y -= 12 * (mini ? 1 : -1);
@@ -403,6 +415,7 @@ export default class BattleInfo extends Phaser.GameObjects.Container {
       this.hpBar.setTexture(`overlay_hp${boss ? '_boss' : ''}`);
       this.box.setTexture(this.getTextureName());
       this.statsBox.setTexture(`${this.getTextureName()}_stats`);
+      this.baseStatsBox.setTexture(`${this.getTextureName()}_stats`);
     }
     
     this.bossSegments = boss ? pokemon.bossSegments : 0;
@@ -422,6 +435,7 @@ export default class BattleInfo extends Phaser.GameObjects.Container {
         divider.setOrigin(0.5, 0);
         this.add(divider);
         this.moveBelow(divider as Phaser.GameObjects.GameObject, this.statsContainer);
+        this.moveBelow(divider as Phaser.GameObjects.GameObject, this.baseStatsContainer);
 
         divider.setPositionRelative(this.hpBar, dividerX, uiTheme ? 0 : 1);
         this.hpBarSegmentDividers.push(divider);
@@ -561,9 +575,9 @@ export default class BattleInfo extends Phaser.GameObjects.Container {
       if (this.player) {
         // console.log('stats', pokemon.stats)
         // console.log('summon stats', pokemon.summonData.stats)
-        this.updateBaseStats(pokemon.stats);
+        this.updateBaseStats(pokemon.stats.slice(1));
       } else {
-        this.updateBaseStats(pokemon.getDisplayStats());
+        this.updateBaseStats(pokemon.getDisplayStats().slice(1));
       }
 
       this.shinyIcon.setVisible(pokemon.isShiny());
@@ -671,7 +685,21 @@ export default class BattleInfo extends Phaser.GameObjects.Container {
   updateBaseStats(baseStats: integer[]): void {
     console.log(baseStats)
       baseStats.map((s, i) => {
-        this.baseStatNumbers[i].setText(s.toString());
+        // convert from integer to mixed 3sig fig (1.89k, 101k, 1.21M etc)
+        let num = s.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ".").substring(0,4)
+        let display = ''
+        if (s > 1000000) {
+          display = num + 'M'
+        } else if (s > 1000) {
+          display = num + 'k'
+        } else if (s < 10) {
+          display = ' ' + num + '  '
+        } else if (s < 100) {
+          display = ' ' + num + ' '
+        } else if (s < 1000) {
+          display = num + ' '
+        }
+        this.baseStatNumbers[i].setText(display);
       });
     
   }
